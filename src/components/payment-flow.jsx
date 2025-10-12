@@ -25,29 +25,44 @@ export default function PaymentPage() {
   // Load payment data from AuthForm
   useEffect(() => {
     const state = location.state;
-    if (!state || !state.amount || !state.package || !state.curriculum) {
-      navigate("/signup");
+    if (
+      !state ||
+      !state.amount ||
+      !state.package ||
+      !state.curriculum ||
+      !state.user ||
+      !state.subjects
+    ) {
+      alert("Missing payment info. Redirecting to signup.");
+      navigate("/auth-form/student");
       return;
     }
 
     setAmount(state.amount);
-    setPackageName(state.package);
+    setPackageName(state.package); // match backend field
     setCurriculum(state.curriculum);
     setRole(state.role || "student");
-    setSubjects(state.subjects || []);
-    setUser(state.user || {});
+    setSubjects(state.subjects);
+    setUser(state.user);
   }, [location.state, navigate]);
 
-  // Handle file upload
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setScreenshot(file);
   };
 
-  // Handle payment submission
   const handlePayment = async () => {
-    if (!screenshot) {
-      alert("Please upload your MoMo payment screenshot before proceeding.");
+    // validate all required fields
+    if (!user?._id || !curriculum || !packageName || !amount || !subjects.length || !screenshot) {
+      console.error("Missing required fields:", {
+        userId: user?._id,
+        curriculum,
+        packageName,
+        amount,
+        subjects,
+        screenshot,
+      });
+      alert("All required fields must be provided before submitting payment.");
       return;
     }
 
@@ -55,14 +70,13 @@ export default function PaymentPage() {
 
     try {
       const formData = new FormData();
-      formData.append("userId", user?._id || "");
-      formData.append("curriculum", curriculum);
+      formData.append("userId", user._id);
+      formData.append("curriculum", curriculum.toUpperCase());
       formData.append("package", packageName);
-      formData.append("grade", user?.grade || "N/A");
-      // ✅ Send subjects as JSON string so backend can parse it as array
-      formData.append("subject", JSON.stringify(subjects));
+      formData.append("grade", user.grade || "N/A");
+      formData.append("subject", JSON.stringify(subjects)); // backend expects 'subject'
       formData.append("amount", amount);
-      formData.append("referenceName", user?.fullName || "N/A");
+      formData.append("referenceName", user.fullName || "N/A");
       formData.append("screenshot", screenshot);
 
       const res = await fetch("http://localhost:5000/api/payments/submit", {
@@ -73,12 +87,9 @@ export default function PaymentPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Payment submission failed");
 
-      if (user?._id) {
-        localStorage.setItem("userId", user._id);
-      }
-
       alert("✅ Payment uploaded successfully! We'll verify your payment soon.");
 
+      // Redirect to student dashboard with payment info
       navigate("/student/dashboard", {
         state: {
           user,
@@ -127,7 +138,7 @@ export default function PaymentPage() {
               <h3 className="text-lg font-semibold text-green-700">MoMo Payment Instructions</h3>
               <p><strong>Name:</strong> DANIEL MENSAH WILLIAMS</p>
               <p><strong>Number:</strong> 0123456789</p>
-              <p><strong>Reference:</strong> {user?.fullName || "Your full name"}</p>
+              <p><strong>Reference:</strong> {user.fullName || "Your full name"}</p>
               <p className="text-sm text-gray-600 mt-2">
                 Please make the payment using the MoMo number above. Then upload a screenshot of your payment below.
               </p>
@@ -147,9 +158,7 @@ export default function PaymentPage() {
             </div>
 
             <Button
-              className={`w-full h-12 text-white rounded-lg transition-colors ${
-                screenshot ? "bg-green-500 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"
-              }`}
+              className={`w-full h-12 text-white rounded-lg transition-colors ${screenshot ? "bg-green-500 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"}`}
               onClick={handlePayment}
               disabled={!screenshot || loading}
             >

@@ -1,26 +1,33 @@
-// routes/course.js
 import express from "express";
-import User from "../models/user.js";
+import Student from "../models/Student.js";
 
 const router = express.Router();
 
-// POST /api/course/register
+// ==================== Register a student for a course ====================
 router.post("/register", async (req, res) => {
   try {
-    const { userId, curriculum } = req.body;
+    const { studentId, curriculum, package: pkg, grade, subjectsEnrolled } = req.body;
 
-    if (!userId || !curriculum) return res.status(400).json({ error: "userId and curriculum are required" });
-    if (!["GES", "Cambridge"].includes(curriculum)) return res.status(400).json({ error: "Invalid curriculum" });
+    if (!studentId || !curriculum) {
+      return res.status(400).json({ error: "studentId and curriculum are required" });
+    }
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { curriculum },
-      { new: true }
-    );
+    if (!["GES", "CAMBRIDGE"].includes(curriculum)) {
+      return res.status(400).json({ error: "Invalid curriculum" });
+    }
 
-    if (!user) return res.status(404).json({ error: "User not found" });
+    const updateData = { curriculum };
 
-    res.json({ message: `Registered for ${curriculum}`, user });
+    if (pkg) updateData.package = pkg;
+    if (grade) updateData.grade = grade;
+    if (subjectsEnrolled) updateData.subjectsEnrolled = subjectsEnrolled; // array of Subject IDs
+
+    const student = await Student.findByIdAndUpdate(studentId, updateData, { new: true })
+      .populate("subjectsEnrolled", "name curriculum classTime teacherId");
+
+    if (!student) return res.status(404).json({ error: "Student not found" });
+
+    res.json({ message: `Registered for ${curriculum} curriculum`, student });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

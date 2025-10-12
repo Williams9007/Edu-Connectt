@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema(
       },
     },
 
-    // Student-specific fields
+    // 🔹 Student-specific fields
     curriculum: {
       type: String,
       enum: ["GES", "Cambridge"],
@@ -72,7 +72,7 @@ const userSchema = new mongoose.Schema(
       min: [1, "Amount must be greater than 0"],
     },
 
-    // Teacher-specific fields
+    // 🔹 Teacher-specific fields
     experience: {
       type: String,
       required: function () {
@@ -80,12 +80,22 @@ const userSchema = new mongoose.Schema(
       },
     },
 
-    // Admin-specific fields
+    // 🔹 Admin-specific fields
     adminCode: {
       type: String,
       required: function () {
         return this.role === "admin";
       },
+    },
+
+    // 🔹 Password Reset Fields
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

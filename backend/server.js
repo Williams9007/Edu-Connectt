@@ -1,54 +1,58 @@
-import dotenv from "dotenv";
-dotenv.config();
-
 import express from "express";
-import mongoose from "mongoose";
+import dotenv from "dotenv";
 import cors from "cors";
+import connectDB from "./Config/db.js";
 import path from "path";
-import fs from 'fs';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 
-import authRoutes from "./routes/authRoutes.js";
-import roleRoutes from "./routes/roleRoutes.js";
-import courseRoutes from "./routes/course.js";
-import paymentRoutes from "./routes/paymentRoutes.js";
+// Import routes
 import studentRoutes from "./routes/studentRoutes.js";
+import teacherRoutes from "./routes/teacherRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
+import subjectRoutes from "./routes/subjectRoutes.js";
+import assignmentRoutes from "./routes/assignmentRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import courseRoutes from "./routes/course.js";
+import roleRoutes from "./routes/roleRoutes.js";
 
-const app = express(); // ✅ Must come BEFORE using routes
+dotenv.config();
+connectDB(); // Connect to MongoDB
 
-// ===== Middleware =====
-app.use(express.json());
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+const app = express();
 
-// ✅ Serve uploaded screenshots statically
-app.use("/uploads", express.static("uploads"));
+// ==================== Middleware ====================
+app.use(cors()); // Enable CORS
+app.use(express.json()); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
-// Resolve __dirname in ES module
+// Serve uploaded files
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // Serve screenshots
 
-// Create upload directory for CVs if it doesn't exist
-const uploadDir = path.join(__dirname, 'uploads', 'cv');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  console.log(`Created directory: ${uploadDir}`);
-}
-
-// ===== MongoDB Connection =====
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.error("❌ MongoDB connection failed:", err));
-
-// ===== Test Root Route =====
-app.get("/", (req, res) => res.send("API is running..."));
-
-// ===== API Routes =====
-app.use("/api/auth", authRoutes);
-app.use("/api/role", roleRoutes);
-app.use("/api/course", courseRoutes);
+// ==================== Routes ====================
+app.use("/api/students", studentRoutes);
+app.use("/api/teachers", teacherRoutes);
 app.use("/api/payments", paymentRoutes);
-app.use("/api/student", studentRoutes); // ✅ Make sure this is BELOW app initialization
+app.use("/api/subjects", subjectRoutes);
+app.use("/api/assignments", assignmentRoutes);
+app.use("/api/admins", adminRoutes);
+app.use("/api/course", courseRoutes);
+app.use("/api/roles", roleRoutes);
 
-// ===== Server Start =====
+// Root route
+app.get("/", (req, res) => {
+  res.send("EduConnect API is running");
+});
+
+// ==================== Error handling middleware ====================
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: err.message });
+});
+
+// ==================== Start server ====================
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

@@ -17,12 +17,12 @@ const LandingPage = () => {
 
   // ✅ Updated Role Click Handler
   const handleRoleClick = (role) => {
-    // lowercase role just for consistency
     const selectedRole = role.toLowerCase();
+    navigate(`/register-course/${selectedRole}`);
+  };
 
-    // Instead of saving only to localStorage, we navigate with state
-   navigate(`/register-course/${selectedRole}`); // dynamic route
-
+  const handleLoginClick = () => {
+    navigate("/login");
   };
 
   const packages = [
@@ -78,18 +78,31 @@ const LandingPage = () => {
         />
         <div className="absolute top-6 left-6 flex items-center gap-2 text-3xl font-bold">
           <FaBookOpen className="text-yellow-400 animate-pulse" />
-          <span className="text-primary">EduConnect</span>
+          <span className="text-primary">EduConnectt</span>
         </div>
+
+        {/* ✅ Login Button Top-Right */}
+        <button
+          onClick={handleLoginClick}
+          className="absolute top-6 right-6 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition"
+        >
+          Login
+        </button>
       </section>
 
-      {/* About Us */}
-      <section className="py-16 px-4 md:px-20 text-center">
-        <h2 className="text-3xl font-bold mb-4">About Us</h2>
-        <p className="text-gray-700 max-w-2xl mx-auto">
-          EduConnect bridges students and teachers, offering accessible
-          learning, real-time resources, and academic guidance for every level.
-        </p>
-      </section>
+   {/* About Us */}
+<section className="py-16 px-4 md:px-20 bg-cyan-50">
+  <div className="max-w-3xl mx-auto text-center">
+    <h2 className="text-4xl md:text-5xl font-extrabold mb-6 text-black-600">
+      About Us
+    </h2>
+    <p>EduConnectt is an online platform that connects teachers and students for virtual after-school classes. We offer both GES and Cambridge curricula. 
+EduConnectt is designed for parents and guardians who want to register their children for online after-school classes. Our platform allows educators to focus on teaching, providing parents with a good return on their investment. We also offer easy access to children's academic performance and mitigate issues associated with traditional home tuition. Additionally, students can enhance their tech skills.</p>
+
+    <h3 className="text-gray-700 text-lg md:text-xl leading-relaxed mb-6">Register today for tracked results!</h3>
+  </div>
+</section>
+
 
       {/* Packages Section */}
       <section className="py-16 px-4 md:px-20 bg-gradient-to-r from-cyan-100 to-blue-50">
@@ -171,6 +184,10 @@ const LandingPage = () => {
             <FaInstagram />
           </a>
         </div>
+        <p className="text-sm text-gray-500 text-center mt-6">
+  © 2025 EduConnect. All rights reserved.
+</p>
+
       </footer>
     </div>
   );

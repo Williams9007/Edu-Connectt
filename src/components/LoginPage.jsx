@@ -3,7 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -34,28 +40,35 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("userId", data.user._id);
+
         alert("Login successful!");
-        if (role === "student") {
-          navigate("/student/dashboard");
-        } else {
-          navigate("/teacher/dashboard");
-        }
+        if (role === "student") navigate("/student/dashboard");
+        else navigate("/teacher/dashboard");
       } else {
         alert(data.message || "Login failed");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Login error:", err);
       alert("Something went wrong. Try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ Fixed: define handleForgotPassword properly in scope
+  const handleForgotPassword = () => {
+    navigate("/forget-password"); // Redirect to forgot password page
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-100">
       <Card className="w-full max-w-md shadow-lg border-0 bg-white/90 backdrop-blur-md rounded-2xl">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-800">EduConnect Login</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-800">
+            EduConnect Login
+          </CardTitle>
           <p className="text-sm text-gray-500 mt-1">Welcome back! Please log in</p>
         </CardHeader>
 
@@ -63,7 +76,9 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-6">
             {/* Role Selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Login as</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Login as
+              </label>
               <Select value={role} onValueChange={setRole}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />
@@ -77,7 +92,9 @@ export default function LoginPage() {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
               <Input
                 type="email"
                 placeholder="you@example.com"
@@ -89,7 +106,9 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
               <Input
                 type="password"
                 placeholder="••••••••"
@@ -97,6 +116,14 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="focus:ring-2 focus:ring-blue-500"
               />
+
+              {/* Forgot password link */}
+              <p
+                className="text-sm text-blue-600 mt-1 cursor-pointer hover:underline"
+                onClick={handleForgotPassword}
+              >
+                Forgot Password?
+              </p>
             </div>
 
             {/* Login Button */}
