@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { ArrowLeft, GraduationCap } from "lucide-react";
@@ -35,88 +41,132 @@ export function AuthForm() {
   };
 
   const gradeOptions = {
-    GES: ["Basic 4","Basic 5","Basic 6","JHS 1","JHS 2","JHS 3","SHS 1","SHS 2","SHS 3"],
-    CAMBRIDGE: ["Stage 4","Stage 5","Stage 6"],
+    GES: [
+      "Basic 4",
+      "Basic 5",
+      "Basic 6",
+      "JHS 1",
+      "JHS 2",
+      "JHS 3",
+      "SHS 1",
+      "SHS 2",
+      "SHS 3",
+    ],
+    CAMBRIDGE: ["Stage 4", "Stage 5", "Stage 6"],
   };
 
-  const curriculumKey = selectedCurriculum.toUpperCase() === "CAMBRIDGE" ? "CAMBRIDGE" : "GES";
+  const curriculumKey =
+    selectedCurriculum.toUpperCase() === "CAMBRIDGE" ? "CAMBRIDGE" : "GES";
   const subjects = Object.keys(subjectPrices[curriculumKey]);
 
-  // Calculate total amount for students
+  // 🔹 Calculate total amount for students
   useEffect(() => {
     if (role === "student") {
-      const sum = formData.subjects.reduce((acc, s) => acc + (subjectPrices[curriculumKey][s] || 0), 0);
+      const sum = formData.subjects.reduce(
+        (acc, s) => acc + (subjectPrices[curriculumKey][s] || 0),
+        0
+      );
       setTotalAmount(formData.subjects.length >= 2 ? sum : 0);
     }
   }, [formData.subjects, curriculumKey, role]);
 
+  // 🔹 Handle Signup Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      let payload, headers;
+      let payload, headers, endpoint;
 
       if (role === "student") {
         if (!formData.grade || formData.subjects.length < 2) {
-          setError("Please select grade and at least 2 subjects.");
+          setError("Please select a grade and at least 2 subjects.");
           setLoading(false);
           return;
         }
+
+        // ✅ Normalize subject names to match backend DB
+        const normalizedSubjects = formData.subjects.map(
+          (s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+        );
+
         payload = {
-          ...formData,
-          role,
-          curriculum: selectedCurriculum,
+          fullName: formData.fullName.trim(),
+          email: formData.email.trim().toLowerCase(),
+          phone: formData.phone.trim(),
+          password: formData.password,
+          curriculum: selectedCurriculum.toUpperCase(),
           package: selectedPackage,
+          grade: formData.grade,
+          subjects: normalizedSubjects,
           amount: totalAmount,
         };
+
+        endpoint = "http://localhost:5000/api/students/register";
         headers = { "Content-Type": "application/json" };
       } else {
         if (!formData.experience || !cvFile) {
-          setError("Please provide experience and upload your CV.");
+          setError("Please provide years of experience and upload your CV.");
           setLoading(false);
           return;
         }
+
         payload = new FormData();
         payload.append("fullName", formData.fullName);
         payload.append("email", formData.email);
         payload.append("phone", formData.phone);
         payload.append("password", formData.password);
-        payload.append("curriculum", selectedCurriculum);
+        payload.append("curriculum", selectedCurriculum.toUpperCase());
         payload.append("experience", formData.experience);
         payload.append("role", role);
         payload.append("cv", cvFile);
-        headers = {}; // browser sets boundary automatically
+
+        endpoint = "http://localhost:5000/api/teachers/register";
+        headers = {}; // browser auto-sets for FormData
       }
 
-      const res = await fetch("http://localhost:5000/api/auth/register", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers,
         body: role === "student" ? JSON.stringify(payload) : payload,
       });
 
-      // Check if response is JSON
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Server did not return JSON. Check backend endpoint URL.");
+        const text = await res.text();
+        throw new Error(`Server did not return JSON. Response: ${text}`);
       }
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Signup failed");
 
-      // Redirect
-      if (role === "student") {
-        navigate("/payment", {
-          state: { user: data.user, role, curriculum: selectedCurriculum, package: selectedPackage, subjects: formData.subjects, amount: totalAmount },
-        });
-      } else {
-        navigate("/"); // teacher landing page
+      // ✅ Save full user object to localStorage
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("userId", data.user._id);
       }
 
+      console.log("✅ Signup successful:", data.user);
+
+      // ✅ Redirect user after signup
+      if (role === "student") {
+        navigate("/payment", {
+          state: {
+            user: data.user,
+            role,
+            curriculum: selectedCurriculum,
+            package: selectedPackage,
+            subjects: formData.subjects,
+            amount: totalAmount,
+          },
+        });
+      } else {
+        navigate("/teacher-dashboard");
+      }
     } catch (err) {
       console.error("Signup error:", err);
-      setError(err.message || "Something went wrong");
+      setError(err.message || "Something went wrong during signup.");
     } finally {
       setLoading(false);
     }
@@ -126,7 +176,12 @@ export function AuthForm() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="max-w-md w-full shadow-lg">
         <CardHeader className="text-center relative">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="absolute left-4 top-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="absolute left-4 top-4"
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto">
@@ -139,45 +194,103 @@ export function AuthForm() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {error && <p className="text-red-600">{error}</p>}
+          {error && <p className="text-red-600 text-sm text-center">{error}</p>}
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <Label>Full Name</Label>
-              <Input value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} required />
+              <Input
+                value={formData.fullName}
+                onChange={(e) =>
+                  setFormData({ ...formData, fullName: e.target.value })
+                }
+                required
+              />
             </div>
 
             <div>
               <Label>Email</Label>
-              <Input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                required
+              />
             </div>
 
             <div>
               <Label>Phone</Label>
-              <Input type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required />
+              <Input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
+                required
+              />
             </div>
 
             <div>
               <Label>Password</Label>
-              <Input type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required />
+              <Input
+                type="password"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                required
+              />
             </div>
 
             {role === "student" && (
               <>
                 <div>
                   <Label>Grade / Level</Label>
-                  <select value={formData.grade} onChange={e => setFormData({...formData, grade: e.target.value})} required className="w-full border border-gray-300 rounded-lg p-2">
+                  <select
+                    value={formData.grade}
+                    onChange={(e) =>
+                      setFormData({ ...formData, grade: e.target.value })
+                    }
+                    required
+                    className="w-full border border-gray-300 rounded-lg p-2"
+                  >
                     <option value="">Select Grade</option>
-                    {gradeOptions[curriculumKey]?.map(g => <option key={g} value={g}>{g}</option>)}
+                    {gradeOptions[curriculumKey]?.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
                   <Label>Subjects (select at least 2)</Label>
-                  <select multiple value={formData.subjects} onChange={e => setFormData({...formData, subjects: Array.from(e.target.selectedOptions, o => o.value)})} required className="w-full border border-gray-300 rounded-lg p-2">
-                    {subjects.map(s => <option key={s} value={s}>{s} — ¢{subjectPrices[curriculumKey][s]}</option>)}
+                  <select
+                    multiple
+                    value={formData.subjects}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        subjects: Array.from(
+                          e.target.selectedOptions,
+                          (o) => o.value
+                        ),
+                      })
+                    }
+                    required
+                    className="w-full border border-gray-300 rounded-lg p-2"
+                  >
+                    {subjects.map((s) => (
+                      <option key={s} value={s}>
+                        {s} — ¢{subjectPrices[curriculumKey][s]}
+                      </option>
+                    ))}
                   </select>
-                  <p className="text-xs text-gray-500">Hold Ctrl (Windows) or Cmd (Mac) to select multiple</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Hold Ctrl (Windows) or Cmd (Mac) to select multiple.
+                  </p>
                 </div>
 
                 <div className="text-lg font-semibold mt-2">
@@ -190,12 +303,25 @@ export function AuthForm() {
               <>
                 <div>
                   <Label>Years of Experience</Label>
-                  <Input type="number" min={0} value={formData.experience} onChange={e => setFormData({...formData, experience: e.target.value})} required />
+                  <Input
+                    type="number"
+                    min={0}
+                    value={formData.experience}
+                    onChange={(e) =>
+                      setFormData({ ...formData, experience: e.target.value })
+                    }
+                    required
+                  />
                 </div>
 
                 <div>
                   <Label>Upload CV</Label>
-                  <Input type="file" accept=".pdf,.doc,.docx" onChange={e => setCvFile(e.target.files[0])} required />
+                  <Input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={(e) => setCvFile(e.target.files[0])}
+                    required
+                  />
                 </div>
               </>
             )}

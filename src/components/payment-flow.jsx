@@ -51,63 +51,61 @@ export default function PaymentPage() {
     setScreenshot(file);
   };
 
-  const handlePayment = async () => {
-    // validate all required fields
-    if (!user?._id || !curriculum || !packageName || !amount || !subjects.length || !screenshot) {
-      console.error("Missing required fields:", {
-        userId: user?._id,
+ const handlePayment = async () => {
+  if (!user?._id || !curriculum || !packageName || !amount || !subjects.length || !screenshot) {
+    console.error("Missing required fields:", {
+      userId: user?._id,
+      curriculum,
+      packageName,
+      amount,
+      subjects,
+      screenshot,
+    });
+    alert("All required fields must be provided before submitting payment.");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const formData = new FormData();
+    formData.append("studentId", user._id); // ✅ FIXED: using user._id
+    formData.append("curriculum", curriculum.toUpperCase());
+    formData.append("package", packageName);
+    formData.append("grade", user.grade || "N/A");
+    formData.append("subjects", JSON.stringify(subjects)); // ✅ match backend
+    formData.append("amount", amount);
+    formData.append("referenceName", user.fullName || "N/A");
+    formData.append("screenshot", screenshot);
+
+    const res = await fetch("http://localhost:5000/api/payments/submit", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Payment submission failed");
+
+    alert("✅ Payment uploaded successfully! We'll verify your payment soon.");
+
+    navigate("/student/dashboard", {
+      state: {
+        user,
+        role,
         curriculum,
-        packageName,
-        amount,
+        package: packageName,
         subjects,
-        screenshot,
-      });
-      alert("All required fields must be provided before submitting payment.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("userId", user._id);
-      formData.append("curriculum", curriculum.toUpperCase());
-      formData.append("package", packageName);
-      formData.append("grade", user.grade || "N/A");
-      formData.append("subject", JSON.stringify(subjects)); // backend expects 'subject'
-      formData.append("amount", amount);
-      formData.append("referenceName", user.fullName || "N/A");
-      formData.append("screenshot", screenshot);
-
-      const res = await fetch("http://localhost:5000/api/payments/submit", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Payment submission failed");
-
-      alert("✅ Payment uploaded successfully! We'll verify your payment soon.");
-
-      // Redirect to student dashboard with payment info
-      navigate("/student/dashboard", {
-        state: {
-          user,
-          role,
-          curriculum,
-          package: packageName,
-          subjects,
-          amount,
-          paymentId: data.payment?._id,
-        },
-      });
-    } catch (error) {
-      console.error("Payment upload error:", error);
-      alert("Payment upload failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+        amount,
+        paymentId: data.payment?._id,
+      },
+    });
+  } catch (error) {
+    console.error("Payment upload error:", error);
+    alert("Payment upload failed. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">

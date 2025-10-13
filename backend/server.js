@@ -14,6 +14,7 @@ import assignmentRoutes from "./routes/assignmentRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import courseRoutes from "./routes/course.js";
 import roleRoutes from "./routes/roleRoutes.js";
+import authRoutes from "./routes/authRoutes.js"
 
 dotenv.config();
 connectDB(); // Connect to MongoDB
@@ -21,7 +22,13 @@ connectDB(); // Connect to MongoDB
 const app = express();
 
 // ==================== Middleware ====================
-app.use(cors()); // Enable CORS
+app.use(
+  cors({
+    origin: "http://localhost:5173", // React app URL
+    credentials: true,
+  })
+);
+
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
@@ -39,6 +46,7 @@ app.use("/api/assignments", assignmentRoutes);
 app.use("/api/admins", adminRoutes);
 app.use("/api/course", courseRoutes);
 app.use("/api/roles", roleRoutes);
+app.use("/api/auth", authRoutes);
 
 // Root route
 app.get("/", (req, res) => {

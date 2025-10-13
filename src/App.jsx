@@ -12,6 +12,9 @@ import { AccountSettings } from "./components/AccountSettings.jsx";
 import ForgetPasswordPage from "./components/ForgetPasswordPage.jsx";
 import ResetPasswordPage from "./components/ResetPasswordPage.jsx";
 import ErrorBoundary from "./components/error-boundary.jsx"; // 
+import {AdminDashboard} from "./components/admin-dashboard.jsx";
+import {AdminAccess} from "./components/admin-access.jsx";
+
 
 function App() {
   const handleSignup = async (data) => {
@@ -31,6 +34,8 @@ function App() {
     <ErrorBoundary>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/access" element={<AdminAccess />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register-course/:role" element={<RegisterCoursePage />} />
         <Route path="/auth-form/:role" element={<AuthForm onSignup={handleSignup} />} />

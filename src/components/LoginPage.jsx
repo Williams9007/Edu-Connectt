@@ -14,52 +14,63 @@ import {
 export default function LoginPage() {
   const navigate = useNavigate();
 
-  // state
   const [role, setRole] = useState("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // handle login
+  // ✅ Handle login
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    if (!email || !password) {
-      alert("Please fill all fields");
-      return;
-    }
-
     setLoading(true);
+
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      // Pick the correct login endpoint
+      const endpoint =
+        role === "teacher"
+          ? "http://localhost:5000/api/teacher/login"
+          : "http://localhost:5000/api/student/login";
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role }),
+        body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      // ✅ Safely check if backend returned JSON
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        console.error("Response not JSON:", text);
+        alert("Login failed: invalid server response.");
+        return;
+      }
 
+      // ✅ Successful login
       if (response.ok) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("userId", data.user._id);
-
         alert("Login successful!");
+
+        // Redirect based on role
         if (role === "student") navigate("/student/dashboard");
         else navigate("/teacher/dashboard");
       } else {
-        alert(data.message || "Login failed");
+        alert(data.message || "Login failed.");
       }
     } catch (err) {
       console.error("Login error:", err);
-      alert("Something went wrong. Try again.");
+      alert("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Fixed: define handleForgotPassword properly in scope
+  // ✅ Forgot password handler
   const handleForgotPassword = () => {
-    navigate("/forget-password"); // Redirect to forgot password page
+    navigate("/forget-password");
   };
 
   return (
@@ -69,7 +80,9 @@ export default function LoginPage() {
           <CardTitle className="text-2xl font-bold text-gray-800">
             EduConnect Login
           </CardTitle>
-          <p className="text-sm text-gray-500 mt-1">Welcome back! Please log in</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Welcome back! Please log in
+          </p>
         </CardHeader>
 
         <CardContent>

@@ -27,35 +27,36 @@ export function StudentDashboard({ user, onLogout }) {
   const [darkMode, setDarkMode] = useState(false);
 
   // 🔹 Fetch Student Data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userId = user?._id || localStorage.getItem("userId");
-        if (!userId) throw new Error("No user ID found");
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const userId = user?._id || localStorage.getItem("userId");
+      if (!userId) throw new Error("No user ID found");
 
-        const response = await apiClient.get(`http://localhost:5000/api/student/${userId}`);
-        const studentData = response.data;
+      const response = await apiClient.get(`/students/${userId}`);
+      const { user: student, subjects, payments } = response.data;
 
-        setStudentInfo({
-          fullName: studentData.fullName,
-          curriculum: studentData.curriculum,
-          grade: studentData.grade,
-          subjects: studentData.subjects || [],
-          createdAt: studentData.createdAt,
-        });
+      setStudentInfo({
+        fullName: student.fullName,
+        curriculum: student.curriculum,
+        grade: student.grade,
+        subjects: subjects.map((s) => s.name) || [],
+        createdAt: student.createdAt,
+      });
 
-        setSubjects(studentData.subjectsDetails || []); 
-        setAssignments(studentData.assignments || []);
-        setPayments(studentData.payments || []);
-      } catch (err) {
-        console.error("Failed to load student data", err);
-        alert("Failed to load student data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [user]);
+      setSubjects(subjects);
+      setPayments(payments);
+      setAssignments(student.assignmentsSubmitted || []);
+    } catch (err) {
+      console.error("Failed to load student data", err);
+      alert("Failed to load student data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, [user]);
 
   // 🔹 Assignment Submission
   const handleSubmitAssignment = async (assignmentId) => {

@@ -4,6 +4,10 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 import User from "../models/user.js";
+import Student from "../models/Student.js";
+import Admin from "../models/admin.js";
+import Teacher from "../models/teacher.js";
+
 
 const router = express.Router();
 
@@ -79,24 +83,8 @@ router.post("/register", async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    // ✅ Send welcome email
-    await transporter.sendMail({
-      from: '"EduConnect" <no-reply@educonnect.com>',
-      to: email,
-      subject: "🎉 Welcome to EduConnect!",
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height:1.6;">
-          <h2 style="color:#4f46e5;">Welcome to EduConnect, ${fullName}!</h2>
-          <p>We’re excited to have you join our learning community.</p>
-          <ul>
-            <li>📚 Explore your subjects and classes</li>
-            <li>👩‍🏫 Connect with teachers and classmates</li>
-            <li>💡 Track your learning progress</li>
-          </ul>
-          <p style="color:#6b7280;">– The EduConnect Team</p>
-        </div>
-      `,
-    });
+    
+    
 
     res.status(201).json({ message: "User registered successfully!", token, user: newUser });
   } catch (error) {
@@ -105,27 +93,52 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// ====================
-// 🔹 LOGIN USER
-// ====================
+
+// ================== USER LOGIN ==================
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Invalid email or password" });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" });
+    }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid email or password" });
+    // ✅ Check if student exists
+    const student = await Student.findOne({ email });
+    if (!student) {
+      return res.status(404).json({ message: "No account found with that email" });
+    }
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    // ✅ Compare password
+    const isMatch = await bcrypt.compare(password, student.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid password" });
+    }
 
-    res.status(200).json({ message: "Login successful", token, user });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Something went wrong during login" });
+    // ✅ Generate JWT token
+    const token = jwt.sign(
+      { id: student._id, role: "student" },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      message: "Login successful",
+      token,
+      user: {
+        id: student._id,
+        fullName: student.fullName,
+        email: student.email,
+        role: "student",
+        curriculum: student.curriculum,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Login error:", err);
+    res.status(500).json({ message: "Server error during login" });
   }
 });
+
 
 // ====================
 // 🔹 FORGOT PASSWORD
