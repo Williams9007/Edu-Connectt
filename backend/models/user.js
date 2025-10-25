@@ -101,5 +101,5 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const User = mongoose.model("User", userSchema);
-export default User;
+// ✅ Prevent OverwriteModelError (important for hot reload and re-imports)
+export default mongoose.models.User || mongoose.model("User", userSchema);

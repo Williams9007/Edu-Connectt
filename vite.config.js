@@ -9,4 +9,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"), // reliable alias
     },
   },
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:5000", // your backend URL
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });

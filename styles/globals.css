@@ -103,3 +103,15 @@
 .animate-spin-slow { animation: spin-slow 3s linear infinite; }
 .animate-bounce-slow { animation: bounce-slow 2s infinite; }
 .animate-ping-slow { animation: ping-slow 2s infinite; }
+
+/* Welcome overlay animation: fade in, hold, then fade out + slide up */
+@keyframes welcome-fade {
+  0% { opacity: 0; transform: translateY(12px) scale(0.98); }
+  10% { opacity: 1; transform: translateY(0) scale(1); }
+  70% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-10px) scale(0.98); }
+}
+
+.animate-welcome-fade {
+  animation: welcome-fade 3s cubic-bezier(.2,.8,.2,1) forwards;
+}

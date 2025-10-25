@@ -2,22 +2,32 @@ import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+async function testEmail() {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
-const mailOptions = {
-  from: `"EduConnectt" <${process.env.EMAIL_USER}>`,
-  to: process.env.EMAIL_USER,
-  subject: "Test Gmail SMTP",
-  text: "If you receive this, Gmail SMTP works!",
-};
+    await transporter.verify();
+    console.log("✅ Gmail SMTP ready");
 
-transporter.sendMail(mailOptions, (err, info) => {
-  if (err) return console.error("❌ Error:", err);
-  console.log("✅ Email sent:", info.response);
-});
+    await transporter.sendMail({
+      from: `"EduConnectt Test" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      subject: "SMTP Test",
+      text: "This is a test email from EduConnectt backend",
+    });
+
+    console.log("✅ Email sent successfully");
+  } catch (err) {
+    console.error("❌ Failed:", err);
+  }
+}
+
+testEmail();

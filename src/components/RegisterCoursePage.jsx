@@ -26,13 +26,29 @@ const RegisterCoursePage = () => {
   // Packages for students only
   const curriculumPackages = {
     GES: [
-      { name: "After School Classes", description: "Enhance your learning after school.", img: "https://source.unsplash.com/400x300/?school,students" },
+      { name: "Extra Classes", description: "Enhance your learning after school.", img: "https://source.unsplash.com/400x300/?school,students" },
       { name: "Home Tuition", description: "Private lessons at home.", img: "https://source.unsplash.com/400x300/?home,tutoring" },
       { name: "Vacation Classes", description: "Learn and have fun during vacations.", img: "https://source.unsplash.com/400x300/?summer,classes" },
+      { name: "Special Classes", description: "Made for you.", img: "https://source.unsplash.com/400x300/?summer,classes" },
+      { name: "One on One  Classes", description: "Learn and have fun during vacations.", img: "https://source.unsplash.com/400x300/?summer,classes" },
+      { name: "Exams Prep Classes", description: "This gets you ready both minded and confident level .", img: "https://source.unsplash.com/400x300/?summer,classes" },
+      { name: "Weekend Classes", description: "Learn smarter, every weekend .", img: "https://source.unsplash.com/400x300/?summer,classes" },
+
+
+      
     ],
     Cambridge: [
       { name: "One on One Classes", description: "Personalized teaching for you.", img: "https://source.unsplash.com/400x300/?one-on-one,tutoring" },
-      { name: "Remedial Classes", description: "Extra help for struggling students.", img: "https://source.unsplash.com/400x300/?remedial,learning" },
+      { name: "Exams Prep Classes", description: "Extra help for struggling students.", img: "https://source.unsplash.com/400x300/?remedial,learning" },
+      { name: " Home  Tuition", description: "Extra help for struggling students.", img: "https://source.unsplash.com/400x300/?remedial,learning" },
+      { name: "Special Classes", description: "Extra help for struggling students.", img: "https://source.unsplash.com/400x300/?remedial,learning" },
+      { name: "Weekend Classes", description: "Extra help for struggling students.", img: "https://source.unsplash.com/400x300/?remedial,learning" },
+      { name: "Extra Classes", description: "Extra help for struggling students.", img: "https://source.unsplash.com/400x300/?remedial,learning" },
+      { name: "Vacation Classes", description: "Extra help for struggling students.", img: "https://source.unsplash.com/400x300/?remedial,learning" },
+
+
+
+      
     ],
   };
 

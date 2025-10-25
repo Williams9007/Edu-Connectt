@@ -19,45 +19,48 @@ export default function ForgetPasswordPage() {
 
   const handleForgetPassword = async (e) => {
     e.preventDefault();
-
-    if (!email) {
-      alert("Please enter your email");
-      return;
-    }
-
     setLoading(true);
+
     try {
-      // ✅ Determine correct backend endpoint based on role
+      if (!email) {
+        alert("Please enter your email address");
+        setLoading(false);
+        return;
+      }
+
+      // ✅ Choose correct backend endpoint based on role
       const endpoint =
         role === "teacher"
-          ? "http://localhost:5000/api/teacher/forget-password"
-          : "http://localhost:5000/api/student/forget-password";
+          ? "http://localhost:5000/api/teachers/forget-password"
+          : "http://localhost:5000/api/students/forget-password";
 
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email }), // ✅ only send email, not password
       });
 
-      const text = await response.text();
+      // ✅ Safely parse JSON (even if backend sends HTML error)
       let data;
       try {
-        data = JSON.parse(text);
-      } catch (err) {
+        data = await response.json();
+      } catch {
+        const text = await response.text();
         console.error("Response not JSON:", text);
-        alert("Server did not return valid JSON. Please check backend route.");
+        alert("Server did not respond correctly. Please try again later.");
+        setLoading(false);
         return;
       }
 
       if (response.ok) {
-        alert(data.message || "✅ Check your email for the reset link!");
-        setTimeout(() => navigate("/login"), 800);
+        alert(data.message || "✅ Password reset link sent! Check your email.");
+        setTimeout(() => navigate("/login"), 1200);
       } else {
-        alert(data.message || "❌ Failed to send reset link.");
+        alert(data.message || "❌ Failed to send reset link. Try again.");
       }
     } catch (err) {
       console.error("Forget password error:", err);
-      alert("Something went wrong. Please try again.");
+      alert("Something went wrong. Please try again later.");
     } finally {
       setLoading(false);
     }

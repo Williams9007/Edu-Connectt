@@ -35,11 +35,13 @@ export function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
 
+  // ✅ Subject prices for normal classes
   const subjectPrices = {
     GES: { English: 150, Maths: 250, Science: 200 },
     CAMBRIDGE: { English: 150, "Core Math": 250, Science: 200 },
   };
 
+  // ✅ Grade options
   const gradeOptions = {
     GES: [
       "Basic 4",
@@ -55,22 +57,35 @@ export function AuthForm() {
     CAMBRIDGE: ["Stage 4", "Stage 5", "Stage 6"],
   };
 
+  // ✅ Special Exam Prep options
+  const examPrepSubjects = {
+    GES: ["GES EPC", "BECE", "WASSCE", "NOVDEC"],
+    CAMBRIDGE: ["CAMBRIDGE EPC", "ICGSCE", "A LEVELS"],
+  };
+
   const curriculumKey =
     selectedCurriculum.toUpperCase() === "CAMBRIDGE" ? "CAMBRIDGE" : "GES";
-  const subjects = Object.keys(subjectPrices[curriculumKey]);
 
-  // 🔹 Calculate total amount for students
+  // ✅ Choose which subjects to show
+  const subjects =
+    selectedPackage.toLowerCase().includes("exam")
+      ? examPrepSubjects[curriculumKey] // show exam prep subjects
+      : Object.keys(subjectPrices[curriculumKey]); // show regular subjects
+
+  // ✅ Calculate total amount (only for normal classes, not Exam Prep)
   useEffect(() => {
-    if (role === "student") {
+    if (role === "student" && !selectedPackage.toLowerCase().includes("exam")) {
       const sum = formData.subjects.reduce(
         (acc, s) => acc + (subjectPrices[curriculumKey][s] || 0),
         0
       );
       setTotalAmount(formData.subjects.length >= 2 ? sum : 0);
+    } else {
+      setTotalAmount(0);
     }
-  }, [formData.subjects, curriculumKey, role]);
+  }, [formData.subjects, curriculumKey, role, selectedPackage]);
 
-  // 🔹 Handle Signup Submit
+  // ✅ Handle Signup Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -80,16 +95,11 @@ export function AuthForm() {
       let payload, headers, endpoint;
 
       if (role === "student") {
-        if (!formData.grade || formData.subjects.length < 2) {
-          setError("Please select a grade and at least 2 subjects.");
+        if (!formData.grade || formData.subjects.length < 1) {
+          setError("Please select a grade and at least one subject.");
           setLoading(false);
           return;
         }
-
-        // ✅ Normalize subject names to match backend DB
-        const normalizedSubjects = formData.subjects.map(
-          (s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
-        );
 
         payload = {
           fullName: formData.fullName.trim(),
@@ -99,7 +109,7 @@ export function AuthForm() {
           curriculum: selectedCurriculum.toUpperCase(),
           package: selectedPackage,
           grade: formData.grade,
-          subjects: normalizedSubjects,
+          subjects: formData.subjects,
           amount: totalAmount,
         };
 
@@ -123,7 +133,7 @@ export function AuthForm() {
         payload.append("cv", cvFile);
 
         endpoint = "http://localhost:5000/api/teachers/register";
-        headers = {}; // browser auto-sets for FormData
+        headers = {}; // auto handled for FormData
       }
 
       const res = await fetch(endpoint, {
@@ -132,24 +142,14 @@ export function AuthForm() {
         body: role === "student" ? JSON.stringify(payload) : payload,
       });
 
-      const contentType = res.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await res.text();
-        throw new Error(`Server did not return JSON. Response: ${text}`);
-      }
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Signup failed");
 
-      // ✅ Save full user object to localStorage
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
         localStorage.setItem("userId", data.user._id);
       }
 
-      console.log("✅ Signup successful:", data.user);
-
-      // ✅ Redirect user after signup
       if (role === "student") {
         navigate("/payment", {
           state: {
@@ -266,9 +266,13 @@ export function AuthForm() {
                 </div>
 
                 <div>
-                  <Label>Subjects (select at least 2)</Label>
+                  <Label>
+                    {selectedPackage.toLowerCase().includes("exam")
+                      ? "Exam Prep Options"
+                      : "Subjects (select at least 2)"}
+                  </Label>
                   <select
-                    multiple
+                    multiple={!selectedPackage.toLowerCase().includes("exam")}
                     value={formData.subjects}
                     onChange={(e) =>
                       setFormData({
@@ -284,18 +288,24 @@ export function AuthForm() {
                   >
                     {subjects.map((s) => (
                       <option key={s} value={s}>
-                        {s} — ¢{subjectPrices[curriculumKey][s]}
+                        {s}
+                        {!selectedPackage.toLowerCase().includes("exam") &&
+                          ` — ¢${subjectPrices[curriculumKey][s]}`}
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Hold Ctrl (Windows) or Cmd (Mac) to select multiple.
-                  </p>
+                  {!selectedPackage.toLowerCase().includes("exam") && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Hold Ctrl (Windows) or Cmd (Mac) to select multiple.
+                    </p>
+                  )}
                 </div>
 
-                <div className="text-lg font-semibold mt-2">
-                  Total Amount: ¢{totalAmount}
-                </div>
+                {!selectedPackage.toLowerCase().includes("exam") && (
+                  <div className="text-lg font-semibold mt-2">
+                    Total Amount: ¢{totalAmount}
+                  </div>
+                )}
               </>
             )}
 

@@ -2,6 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
 import Student from "../models/Student.js";
 import Payment from "../models/Payment.js";
 import Subject from "../models/Subject.js";
@@ -9,8 +11,8 @@ import { sendWelcomeEmail } from "../message/sendWelcomeEmail.js";
 import dotenv from "dotenv";
 
 dotenv.config();
-
 const router = express.Router();
+
 
 // ==================== REGISTER STUDENT ====================
 router.post("/register", async (req, res) => {
@@ -118,6 +120,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
+
 // ==================== LOGIN STUDENT ====================
 router.post("/login", async (req, res) => {
   try {
@@ -141,7 +144,90 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ==================== GET CURRENT STUDENT (via token) ====================
+
+// ==================== FORGOT PASSWORD (Send reset link) ====================
+router.post("/forget-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const student = await Student.findOne({ email });
+    if (!student)
+      return res.status(404).json({ message: "No user found with this email" });
+
+    // Generate secure reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpiry = Date.now() + 15 * 60 * 1000; // 15 min expiry
+
+    student.resetToken = resetToken;
+    student.resetTokenExpiry = resetTokenExpiry;
+    await student.save();
+
+    const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+
+    // ✅ Gmail transporter instead of Ethereal
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    // Send reset email
+    await transporter.sendMail({
+      from: `"EduConnect Support" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Password Reset Request",
+      html: `
+        <p>Hello ${student.fullName || "Student"},</p>
+        <p>You requested a password reset. Click the link below to set a new one:</p>
+        <p>Don't share the link with anyone.</p>
+        <a href="${resetLink}" target="_blank" 
+          style="background:#4f46e5;color:#fff;padding:10px 20px;text-decoration:none;border-radius:6px;">
+          Reset Password
+        </a>
+        <p>This link will expire in 15 minutes.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+      `,
+    });
+
+    res.json({ message: "✅ Password reset link sent! Check your email." });
+  } catch (err) {
+    console.error("❌ Error sending password reset email:", err);
+    res.status(500).json({ message: "Server error sending reset email" });
+  }
+});
+
+// ==================== RESET PASSWORD ====================
+router.post("/reset-password/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { newPassword } = req.body;
+
+    const student = await Student.findOne({
+      resetToken: token,
+      resetTokenExpiry: { $gt: Date.now() },
+    });
+
+    if (!student)
+      return res.status(400).json({ message: "Invalid or expired reset link" });
+
+    const salt = await bcrypt.genSalt(10);
+    student.password = await bcrypt.hash(newPassword, salt);
+    student.resetToken = undefined;
+    student.resetTokenExpiry = undefined;
+    await student.save();
+
+    res.json({ message: "✅ Password reset successful!" });
+  } catch (err) {
+    console.error("❌ Error resetting password:", err);
+    res.status(500).json({ message: "Server error resetting password" });
+  }
+});
+
+
+// ==================== GET CURRENT STUDENT ====================
 router.get("/me", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -166,6 +252,7 @@ router.get("/me", async (req, res) => {
   }
 });
 
+
 // ==================== GET STUDENT BY ID ====================
 router.get("/:id", async (req, res) => {
   try {
@@ -185,25 +272,6 @@ router.get("/:id", async (req, res) => {
   } catch (err) {
     console.error("Error fetching student by ID:", err);
     res.status(500).json({ message: "Server error fetching student" });
-  }
-});
-
-// ==================== FORGOT PASSWORD ====================
-router.post("/forgot-password", async (req, res) => {
-  try {
-    const { email, newPassword } = req.body;
-    const student = await Student.findOne({ email });
-    if (!student)
-      return res.status(404).json({ message: "User not found" });
-
-    const salt = await bcrypt.genSalt(10);
-    student.password = await bcrypt.hash(newPassword, salt);
-    await student.save();
-
-    res.json({ message: "Password reset successful" });
-  } catch (err) {
-    console.error("Error resetting password:", err);
-    res.status(500).json({ message: "Server error resetting password" });
   }
 });
 

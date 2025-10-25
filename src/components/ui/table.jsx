@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { cn } from "./utils";
+import { cn } from "../../utils/helpers";
 
 function Table({ className, ...props }) {
   return (

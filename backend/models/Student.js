@@ -15,6 +15,10 @@ const studentSchema = new mongoose.Schema(
     assignmentsSubmitted: [
       { type: mongoose.Schema.Types.ObjectId, ref: "Assignment" },
     ],
+
+    // 🔐 Added for password reset functionality
+    resetToken: { type: String },
+    resetTokenExpiry: { type: Date },
   },
   { timestamps: true }
 );

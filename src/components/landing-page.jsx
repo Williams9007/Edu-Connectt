@@ -11,6 +11,8 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useNavigate } from "react-router-dom";
+import ChatBotWidget from "../components/ChatBotWidget";
+
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -27,29 +29,39 @@ const LandingPage = () => {
 
   const packages = [
     {
-      title: "After School Classes",
+      title: "Extra Classes",
       description: "Enhance your learning after school.",
-      img: "https://source.unsplash.com/400x300/?school,students",
+      img: "https://media.istockphoto.com/id/2060534013/photo/after-school-tutoring.webp?a=1&b=1&s=612x612&w=0&k=20&c=98ns3AW5Xvzpldy5VjqJNIeDgwi3tFpBoDOT57nm3vY=",
     },
     {
-      title: "Home Tuition",
+      title: "Home School",
       description: "Private lessons at home.",
-      img: "https://source.unsplash.com/400x300/?home,tutoring",
+      img: "https://media.istockphoto.com/id/1327099264/photo/grandfather-is-teaching-lessons-to-his-teenage-grandson-at-home.webp?a=1&b=1&s=612x612&w=0&k=20&c=lib213WlEWpeWuy7TjFsgboyrEIjH6RwJ04OE1HbDqY=",
     },
     {
       title: "Vacation Classes",
       description: "Learn and have fun during vacations.",
-      img: "https://source.unsplash.com/400x300/?summer,classes",
+      img: "https://media.istockphoto.com/id/834369132/photo/colourful-children-schoolbags-outdoors-on-the-field.webp?a=1&b=1&s=612x612&w=0&k=20&c=uSAb3IuPbiLIT7n0q3LVOV7fzuyNv-o1OSLRLgevjHs=",
     },
     {
       title: "One on One Classes",
       description: "Personalized teaching for you.",
-      img: "https://source.unsplash.com/400x300/?one-on-one,tutoring",
+      img: "https://media.istockphoto.com/id/1292825155/photo/youre-the-best-teacher.webp?a=1&b=1&s=612x612&w=0&k=20&c=8j_Lr9GWaVogBqQVkzrd-mm4ZUIbN1-09hCNriO7A1o=",
     },
     {
-      title: "Remedial Classes",
+      title: "Exams Prep Classes",
       description: "Extra help for struggling students.",
-      img: "https://source.unsplash.com/400x300/?remedial,learning",
+      img: "https://media.istockphoto.com/id/917599168/photo/professor-writing-mathematical-formula-and-equation-to-blackboard-in-school-classroom-college.webp?a=1&b=1&s=612x612&w=0&k=20&c=icndRFzGZ6cG_kw9Qw5l6OWPhXdC20CCmAhUVyBlHIk=",
+    },
+     {
+      title: "Special Classes",
+      description: "Extra help for struggling students.",
+      img: "https://media.istockphoto.com/id/917599168/photo/professor-writing-mathematical-formula-and-equation-to-blackboard-in-school-classroom-college.webp?a=1&b=1&s=612x612&w=0&k=20&c=icndRFzGZ6cG_kw9Qw5l6OWPhXdC20CCmAhUVyBlHIk=",
+    },
+     {
+      title: "Weekend Classes",
+      description: "Extra help for struggling students.",
+      img: "https://media.istockphoto.com/id/917599168/photo/professor-writing-mathematical-formula-and-equation-to-blackboard-in-school-classroom-college.webp?a=1&b=1&s=612x612&w=0&k=20&c=icndRFzGZ6cG_kw9Qw5l6OWPhXdC20CCmAhUVyBlHIk=",
     },
   ];
 
@@ -69,13 +81,29 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-cyan-100 text-gray-900">
+ <ChatBotWidget />
+
       {/* Hero Section */}
       <section className="relative h-screen">
         <img
-          src="https://source.unsplash.com/1600x900/?education,classroom"
+          src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8c3R1ZGVudHN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=1920&q=80"
+          srcSet="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8c3R1ZGVudHN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=768&q=80 768w, https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8c3R1ZGVudHN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=1280&q=80 1280w, https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8c3R1ZGVudHN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=1920&q=80 1920w, https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8c3R1ZGVudHN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=3840&q=80 3840w"
+          sizes="100vw"
+          loading="eager"
           alt="Hero"
           className="w-full h-full object-cover"
         />
+        {/* Welcome overlay: appears center and fades out */}
+        <div
+          role="status"
+          aria-live="polite"
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        >
+          <div className="bg-black/60 text-white px-6 py-4 rounded-xl text-center max-w-xl animate-welcome-fade">
+            <h1 className="text-3xl md:text-5xl font-extrabold mb-2">Welcome to EduConnectt</h1>
+            <p className="text-sm md:text-base opacity-90">Connecting students and teachers for meaningful learning.</p>
+          </div>
+        </div>
         <div className="absolute top-6 left-6 flex items-center gap-2 text-3xl font-bold">
           <FaBookOpen className="text-yellow-400 animate-pulse" />
           <span className="text-primary">EduConnectt</span>
@@ -192,5 +220,8 @@ EduConnectt is designed for parents and guardians who want to register their chi
     </div>
   );
 };
+
+
+
 
 export default LandingPage;

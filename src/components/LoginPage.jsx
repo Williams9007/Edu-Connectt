@@ -28,8 +28,8 @@ export default function LoginPage() {
       // Pick the correct login endpoint
       const endpoint =
         role === "teacher"
-          ? "http://localhost:5000/api/teacher/login"
-          : "http://localhost:5000/api/student/login";
+          ? "http://localhost:5000/api/teachers/login"
+          : "http://localhost:5000/api/students/login";
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -135,7 +135,7 @@ export default function LoginPage() {
                 className="text-sm text-blue-600 mt-1 cursor-pointer hover:underline"
                 onClick={handleForgotPassword}
               >
-                Forgot Password?
+                Forget Password?
               </p>
             </div>
 
